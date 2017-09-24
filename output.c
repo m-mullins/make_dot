@@ -86,6 +86,9 @@ _outputs (struct output *out, int is_err, const char *msg)
 static int
 log_working_directory (int entering)
 {
+  if (print_deptree_as_dot_flag)
+    return 1;
+
   static char *buf = NULL;
   static unsigned int len = 0;
   unsigned int need;

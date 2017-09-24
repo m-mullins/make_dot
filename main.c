@@ -100,6 +100,7 @@ double atof ();
 
 static void clean_jobserver (int status);
 static void print_data_base (void);
+static void print_deptree_as_dot (void);
 static void print_version (void);
 static void decode_switches (int argc, const char **argv, int env);
 static void decode_env_switches (const char *envar, unsigned int len);
@@ -203,6 +204,10 @@ int ignore_errors_flag = 0;
    that results from reading the makefile (-p).  */
 
 int print_data_base_flag = 0;
+
+/* Print C/C++ dependency as graphviz dot file */
+
+int print_deptree_as_dot_flag = 0;
 
 /* Nonzero means don't remake anything; just return a nonzero status
    if the specified targets are not up to date (-q).  */
@@ -432,6 +437,7 @@ static const struct command_switch switches[] =
     { 'm', ignore, 0, 0, 0, 0, 0, 0, 0 },
     { 'n', flag, &just_print_flag, 1, 1, 1, 0, 0, "just-print" },
     { 'p', flag, &print_data_base_flag, 1, 1, 0, 0, 0, "print-data-base" },
+    { 'z', flag, &print_deptree_as_dot_flag, 1, 1, 0, 0, 0, "print-deptree-as-dot" },
     { 'q', flag, &question_flag, 1, 1, 1, 0, 0, "question" },
     { 'r', flag, &no_builtin_rules_flag, 1, 1, 0, 0, 0, "no-builtin-rules" },
     { 'R', flag, &no_builtin_variables_flag, 1, 1, 0, 0, 0,
@@ -3353,6 +3359,55 @@ print_version (void)
   fflush (stdout);
 }
 
+/* Print deptree for C/C++ targets as graphviz dot file.  */
+
+static void
+print_deptree_as_dot (void)
+{
+  unsigned int makelevel = 0;
+  time_t when = time ((time_t *) 0);
+
+  //print_version ();
+
+  //printf (_("\n# Make data base, printed on %s"), ctime (&when));
+
+  //print_variable_data_base ();
+  //print_dir_data_base ();
+  //print_rule_data_base ();
+  //print_file_data_base ();
+  //print_vpath_data_base ();
+  //strcache_print_stats ("#");
+
+  if (starting_directory == 0)
+    {
+      printf("digraph \"unknown\" {\n");
+    }
+  else
+    {
+      printf("digraph \"%s\" {\n",starting_directory);
+    }
+
+  printf("// goals == %p\n", (void*)goals);
+  if (goals)
+  {
+      printf("// goals->name == %p\n", (void*)goals->name);
+      if (goals->name)
+      {
+          printf("// goals == %p :: %s\n", (void*)goals, goals->name);
+      }
+      printf("// goals->stem == %p\n", (void*)goals->stem);
+      if (goals->stem)
+      {
+          printf("// goals == %p :: %s\n", (void*)goals, goals->stem);
+      }
+      printf("// goals->next == %p\n", (void*)goals->next);
+  }
+
+  when = time ((time_t *) 0);
+  printf (_("}\n"));
+  printf (_("\n// Finished print deptree %s %d\n"), ctime (&when), getpid());
+}
+
 /* Print a bunch of information about this and that.  */
 
 static void
@@ -3441,6 +3496,9 @@ die (int status)
 
       if (print_data_base_flag)
         print_data_base ();
+
+      if (print_deptree_as_dot_flag)
+        print_deptree_as_dot ();
 
       if (verify_flag)
         verify_file_data_base ();
