@@ -437,7 +437,7 @@ static const struct command_switch switches[] =
     { 'm', ignore, 0, 0, 0, 0, 0, 0, 0 },
     { 'n', flag, &just_print_flag, 1, 1, 1, 0, 0, "just-print" },
     { 'p', flag, &print_data_base_flag, 1, 1, 0, 0, 0, "print-data-base" },
-    { 'z', flag, &print_deptree_as_dot_flag, 1, 1, 0, 0, 0, "print-deptree-as-dot" },
+    { 'G', flag, &print_deptree_as_dot_flag, 1, 1, 0, 0, 0, "print-deptree-as-dot" },
     { 'q', flag, &question_flag, 1, 1, 1, 0, 0, "question" },
     { 'r', flag, &no_builtin_rules_flag, 1, 1, 0, 0, 0, "no-builtin-rules" },
     { 'R', flag, &no_builtin_variables_flag, 1, 1, 0, 0, 0,
@@ -3373,7 +3373,6 @@ print_deptree_as_dot (void)
 
   //print_variable_data_base ();
   //print_dir_data_base ();
-  //print_rule_data_base ();
   //print_file_data_base ();
   //print_vpath_data_base ();
   //strcache_print_stats ("#");
@@ -3387,25 +3386,28 @@ print_deptree_as_dot (void)
       printf("digraph \"%s\" {\n",starting_directory);
     }
 
-  printf("// goals == %p\n", (void*)goals);
-  if (goals)
-  {
-      printf("// goals->name == %p\n", (void*)goals->name);
-      if (goals->name)
-      {
-          printf("// goals == %p :: %s\n", (void*)goals, goals->name);
-      }
-      printf("// goals->stem == %p\n", (void*)goals->stem);
-      if (goals->stem)
-      {
-          printf("// goals == %p :: %s\n", (void*)goals, goals->stem);
-      }
-      printf("// goals->next == %p\n", (void*)goals->next);
-  }
+  printf("\t rankdir=\"LR\"\n");
+  //printf("// goals == %p\n", (void*)goals);
+  //if (goals)
+  //{
+  //    printf("// goals->name == %p\n", (void*)goals->name);
+  //    if (goals->name)
+  //    {
+  //        printf("// goals == %p :: %s\n", (void*)goals, goals->name);
+  //    }
+  //    printf("// goals->stem == %p\n", (void*)goals->stem);
+  //    if (goals->stem)
+  //    {
+  //        printf("// goals == %p :: %s\n", (void*)goals, goals->stem);
+  //    }
+  //    printf("// goals->next == %p\n", (void*)goals->next);
+  //}
 
+  //print_rule_data_base ();
+  print_file_data_base_as_dot ();
   when = time ((time_t *) 0);
   printf (_("}\n"));
-  printf (_("\n// Finished print deptree %s %d\n"), ctime (&when), getpid());
+  //printf (_("\n// Finished print deptree %s %d\n"), ctime (&when), getpid());
 }
 
 /* Print a bunch of information about this and that.  */

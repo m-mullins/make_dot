@@ -932,6 +932,121 @@ print_prereqs (const struct dep *deps)
   putchar ('\n');
 }
 
+//https://stackoverflow.com/questions/744766/how-to-compare-ends-of-strings-in-c
+static unsigned int
+str_ends_with(const char* str, const char* suffix)
+{
+  if (!str || !suffix)
+    return 0;
+
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suffix);
+  if (lensuffix >= lenstr) //don't include ".o, .c suffix files"
+    return 0;
+
+  return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+static unsigned int
+prereqs_ends_with (const struct dep *deps, const char* suffix)
+{
+  const struct dep *ood = 0;
+
+  for (; deps != 0; deps = deps->next)
+    if (! deps->ignore_mtime)
+      if (deps->file->name && str_ends_with (deps->file->name, suffix))
+        return 1;
+    else if (! ood)
+      ood = deps;
+
+  if (ood)
+    {
+      for (ood = ood->next; ood != 0; ood = ood->next)
+        if (ood->ignore_mtime)
+          if (ood->file->name && str_ends_with (dep_name (ood), suffix))
+            return 1;
+    }
+
+  return 0;
+}
+
+// as dot
+unsigned int
+print_prereqs_as_dot (const char* name, const struct dep *deps, const char* suffix, unsigned int ood)
+{
+  const struct dep * start = 0;
+  const struct dep *duplicate = 0;
+  unsigned int printed = 0;
+
+  /* Print all normal dependencies; note any order-only deps.  */
+  for (; deps != 0; deps = deps->next)
+    if (deps->ignore_mtime == ood)
+      {
+        if (! start)
+          start = deps;
+
+        if (str_ends_with(dep_name (deps),suffix))
+          {
+            size_t lenname = strlen(dep_name(deps));
+            for (duplicate = start; duplicate!=deps; duplicate = duplicate->next)
+              {
+                if (strncmp(dep_name(deps), dep_name(duplicate), lenname) == 0)
+                  break;
+              }
+            if (duplicate == deps)
+              if (! printed && name)
+                {
+                  printf ("\t\"%s\" %s { \"%s\"", name, ood ? "--" : "->", dep_name (deps));
+                  printed = 1;
+                }
+              else
+                  printf (", \"%s\"", dep_name (deps));
+          }
+      }
+
+  return printed;
+}
+
+static void
+print_file_as_dot (const void *item)
+{
+  const struct file *f = item;
+  unsigned int printed = 0;
+
+  /* If we're not using builtin targets, don't show them.
+
+     Ideally we'd be able to delete them altogether but currently there's no
+     facility to ever delete a file once it's been added.  */
+  if (no_builtin_rules_flag && f->builtin)
+    return;
+
+  if (f->is_target)
+    {
+      if(str_ends_with(f->name, ".o") || prereqs_ends_with(f->deps, ".o"))
+        {
+          printed = print_prereqs_as_dot (f->name, f->deps, ".c",0);
+          if (printed)
+            printed += print_prereqs_as_dot (0, f->deps, ".o",0);
+          else
+            printed += print_prereqs_as_dot (f->name, f->deps, ".o",0);
+
+          if (printed)
+            printf (" }\n");
+
+          printed = 0;
+          printed = print_prereqs_as_dot (f->name, f->deps, ".c",1);
+          if (printed)
+            printed += print_prereqs_as_dot (0, f->deps, ".o",1);
+          else
+            printed += print_prereqs_as_dot (f->name, f->deps, ".o",1);
+          if (printed)
+            printf (" }\n");
+        }
+    }
+    
+  if (f->prev)
+    print_file_as_dot ((const void *) f->prev);
+}
 static void
 print_file (const void *item)
 {
@@ -1043,6 +1158,15 @@ print_file (const void *item)
 
   if (f->prev)
     print_file ((const void *) f->prev);
+}
+
+void
+print_file_data_base_as_dot (void)
+{
+  hash_map (&files, print_file_as_dot);
+
+  //fputs (_("\n# files hash-table stats:\n# "), stdout);
+  //hash_print_stats (&files, stdout);
 }
 
 void

@@ -220,7 +220,7 @@ update_goal_chain (struct goaldep *goaldeps)
                      any commands were actually started for this goal.  */
                   && file->update_status == us_success && !g->changed
                   /* Never give a message under -s or -q.  */
-                  && !silent_flag && !question_flag)
+                  && !silent_flag && !question_flag && !print_deptree_as_dot_flag)
                 OS (message, 1, ((file->phony || file->cmds == 0)
                                  ? _("Nothing to be done for '%s'.")
                                  : _("'%s' is up to date.")),
