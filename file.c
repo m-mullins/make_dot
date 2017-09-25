@@ -1012,9 +1012,6 @@ print_file_as_dot (const void *item, void* arg)
 {
   const struct file *f = item;
   const char* target = (const char*)arg;
-  size_t targetlen = 0;
-  if (target)
-    targetlen = strlen(target);
   unsigned int printed = 0;
   const struct dep * deps = 0;
 
@@ -1026,9 +1023,10 @@ print_file_as_dot (const void *item, void* arg)
     return;
 
   if ((!target && f->cmd_target) ||
-          (target && (strncmp(target, f->name, targetlen) == 0)))
+          (target && (strncmp(target, f->name, 8192) == 0))) //TODO 8192
     {
       printed = print_prereqs_as_dot (f->name, f->deps, ".c",0);
+
       if (printed)
         printed += print_prereqs_as_dot (0, f->deps, ".o",0);
       else
