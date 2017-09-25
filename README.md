@@ -1,17 +1,28 @@
 # Produce graph dot diagrams of makes dependency tree
 * A new "-G" option will now produce graphviz dot file compatible output of the make dependency tree.
-* Use on small projects.
+* Filters for "*.c" and "*.o" targets
 
-# TODO
-* Need to make sure it only prints the graphs for a particular target
+# Example 1 for main.o
+```
+make -G main.o 2>/dev/null  | dot -Tpng >examples/main.png
+```
+![main.png](https://rawgit.com/m-mullins/make_dot/master/examples/main.png)
 
-# Example 1 in the glob/ directory
+# Example 2 for loadavg target
 ```
-make -C glob -G libglob.a | dot -Tpng >./example/glob.png
+make -G loadavg 2>/dev/null  | dot -Tpng >examples/loadavg.png
 ```
-![glob.png](https://rawgit.com/m-mullins/make_dot/master/examples/glob.png)
-# Example 2 for the make binary
+![loadavg.png](https://rawgit.com/m-mullins/make_dot/master/examples/loadavg.png)
+
+# Example 3 for the make binary
 ```
-make -G make | dot -Tpng >./example/make.png
+make -G make 2>/dev/null | dot -Tpng >./example/make.png
 ```
 ![make.png](https://rawgit.com/m-mullins/make_dot/master/examples/make.png)
+
+# Example 4 in the glob/ directory
+```
+make -C glob -G libglob.a  2>/dev/null | dot -Tpng >./example/glob.png
+```
+![glob.png](https://rawgit.com/m-mullins/make_dot/master/examples/glob.png)
+

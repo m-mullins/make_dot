@@ -1008,10 +1008,15 @@ print_prereqs_as_dot (const char* name, const struct dep *deps, const char* suff
 }
 
 static void
-print_file_as_dot (const void *item)
+print_file_as_dot (const void *item, void* arg)
 {
   const struct file *f = item;
+  const char* target = (const char*)arg;
+  size_t targetlen = 0;
+  if (target)
+    targetlen = strlen(target);
   unsigned int printed = 0;
+  const struct dep * deps = 0;
 
   /* If we're not using builtin targets, don't show them.
 
@@ -1020,33 +1025,41 @@ print_file_as_dot (const void *item)
   if (no_builtin_rules_flag && f->builtin)
     return;
 
-  if (f->is_target)
+  if ((!target && f->cmd_target) ||
+          (target && (strncmp(target, f->name, targetlen) == 0)))
     {
-      if(str_ends_with(f->name, ".o") || prereqs_ends_with(f->deps, ".o"))
+      printed = print_prereqs_as_dot (f->name, f->deps, ".c",0);
+      if (printed)
+        printed += print_prereqs_as_dot (0, f->deps, ".o",0);
+      else
+        printed += print_prereqs_as_dot (f->name, f->deps, ".o",0);
+
+      if (printed)
+        printf (" }\n");
+
+      printed = 0;
+      printed = print_prereqs_as_dot (f->name, f->deps, ".c",1);
+      if (printed)
+        printed += print_prereqs_as_dot (0, f->deps, ".o",1);
+      else
+        printed += print_prereqs_as_dot (f->name, f->deps, ".o",1);
+      if (printed)
+        printf (" }\n");
+
+      deps = f->deps;
+      for (; deps != 0; deps = deps->next)
         {
-          printed = print_prereqs_as_dot (f->name, f->deps, ".c",0);
-          if (printed)
-            printed += print_prereqs_as_dot (0, f->deps, ".o",0);
-          else
-            printed += print_prereqs_as_dot (f->name, f->deps, ".o",0);
-
-          if (printed)
-            printf (" }\n");
-
-          printed = 0;
-          printed = print_prereqs_as_dot (f->name, f->deps, ".c",1);
-          if (printed)
-            printed += print_prereqs_as_dot (0, f->deps, ".o",1);
-          else
-            printed += print_prereqs_as_dot (f->name, f->deps, ".o",1);
-          if (printed)
-            printf (" }\n");
+          if (str_ends_with(dep_name(deps), ".c") || str_ends_with(dep_name(deps),".o"))
+            {
+              hash_map_arg (&files, print_file_as_dot, (void*)dep_name(deps));
+            }
         }
     }
     
   if (f->prev)
-    print_file_as_dot ((const void *) f->prev);
+    print_file_as_dot ((const void *) f->prev, arg);
 }
+
 static void
 print_file (const void *item)
 {
@@ -1163,7 +1176,7 @@ print_file (const void *item)
 void
 print_file_data_base_as_dot (void)
 {
-  hash_map (&files, print_file_as_dot);
+  hash_map_arg (&files, print_file_as_dot, 0);
 
   //fputs (_("\n# files hash-table stats:\n# "), stdout);
   //hash_print_stats (&files, stdout);
