@@ -5,8 +5,10 @@
 # Example 1 in the glob/ directory
 ```
 make -C glob -G libglob.a | dot -Tpng >./example/glob.png
+![glob.png](https://rawgit.com/m-mullins/make_dot/master/examples/glob.png)
 ```
 # Example 2 for the make binary
 ```
-make -G make | dot -Tpng >./example/glob.png
+make -G make | dot -Tpng >./example/make.png
 ```
+![make.png](https://rawgit.com/m-mullins/make_dot/master/examples/make.png)
